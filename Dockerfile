@@ -43,7 +43,7 @@ RUN mkdir -p /home/appuser/.insightface && \
 COPY --chown=appuser:appuser app/ ./app/
 COPY --chown=appuser:appuser scripts/ ./scripts/
 
-RUN python -c "from insightface.app import FaceAnalysis; fa = FaceAnalysis(name='buffalo_l', allowed_modules=['detection', 'recognition']); fa.prepare(ctx_id=-1, det_size=(640, 640)); print('Model downloaded and cached.')" || echo "Model pre-download failed - will download at runtime."
+RUN python -c "from insightface.app import FaceAnalysis; fa = FaceAnalysis(name='buffalo_s', allowed_modules=['detection', 'recognition']); fa.prepare(ctx_id=-1, det_size=(640, 640)); print('Model downloaded and cached.')" || echo "Model pre-download failed - will download at runtime."
 
 USER appuser
 
