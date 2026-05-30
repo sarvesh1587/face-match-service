@@ -1,0 +1,68 @@
+# render.yaml — One-click deploy to Render
+# https://render.com/docs/infrastructure-as-code
+#
+# WHY RENDER (vs Railway / Fly.io)?
+# ──────────────────────────────────
+# • Free tier includes 512 MB RAM + 0.1 CPU — enough for CPU-mode InsightFace
+# • Native Docker support — no extra config needed
+# • Persistent disks available for InsightFace model cache
+# • Auto-deploy on git push to main
+# • Built-in env var management
+#
+# RAILWAY: also a strong choice; simpler UI but $5/mo minimum after trial.
+# FLY.IO:  best for latency (multi-region), but requires flyctl setup.
+# RENDER:  best for zero-friction demo deployments. Winner for this task.
+
+services:
+  # ── Face Match API ──────────────────────────────────────────────────────────
+  - type: web
+    name: face-match-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter          # 512 MB RAM, 0.5 CPU — upgrade to standard for GPU
+    region: oregon
+    branch: main
+    autoDeploy: true
+
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: QDRANT_HOST
+        fromService:
+          name: face-match-qdrant
+          type: pserv
+          property: host
+      - key: QDRANT_PORT
+        value: "6333"
+      - key: QDRANT_COLLECTION
+        value: face_embeddings
+      - key: MATCH_THRESHOLD
+        value: "0.40"
+      - key: TOP_K
+        value: "5"
+      - key: INSIGHTFACE_MODEL
+        value: buffalo_l
+      - key: INSIGHTFACE_CTX_ID
+        value: "-1"
+
+    disk:
+      name: insightface-models
+      mountPath: /home/appuser/.insightface
+      sizeGB: 2
+
+    healthCheckPath: /health
+
+  # ── Qdrant (private service — not exposed to internet) ───────────────────────
+  - type: pserv
+    name: face-match-qdrant
+    env: docker
+    dockerImage: qdrant/qdrant:v1.8.4
+    plan: starter
+    region: oregon
+
+    disk:
+      name: qdrant-storage
+      mountPath: /qdrant/storage
+      sizeGB: 5

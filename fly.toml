@@ -1,0 +1,41 @@
+# fly.toml — Fly.io deployment
+# Deploy with: fly launch (first time) or fly deploy
+#
+# Fly.io advantage: multi-region, closest datacenter to user answers
+# This config targets Singapore (sin) for South/Southeast Asia proximity.
+
+app = "face-match-service"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 50
+    soft_limit = 25
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 2048   # InsightFace needs ~1 GB RAM
+
+[env]
+  APP_ENV = "production"
+  LOG_LEVEL = "INFO"
+  INSIGHTFACE_MODEL = "buffalo_l"
+  INSIGHTFACE_CTX_ID = "-1"
+  MATCH_THRESHOLD = "0.40"
+  TOP_K = "5"
+  # QDRANT_HOST and QDRANT_API_KEY set via: fly secrets set KEY=value
+
+[[mounts]]
+  source = "insightface_cache"
+  destination = "/home/appuser/.insightface"
