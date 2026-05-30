@@ -63,12 +63,7 @@ COPY --chown=appuser:appuser scripts/ ./scripts/
 # Pre-download the InsightFace model at build time so the container
 # starts in seconds rather than downloading ~300 MB on first request.
 # This makes the image larger but eliminates cold-start latency.
-RUN python -c "
-from insightface.app import FaceAnalysis
-fa = FaceAnalysis(name='buffalo_l', allowed_modules=['detection', 'recognition'])
-fa.prepare(ctx_id=-1, det_size=(640, 640))
-print('Model downloaded and cached.')
-" || echo "Model pre-download failed — will download at runtime."
+RUN python -c "from insightface.app import FaceAnalysis; fa = FaceAnalysis(name='buffalo_l', allowed_modules=['detection', 'recognition']); fa.prepare(ctx_id=-1, det_size=(640, 640)); print('Model downloaded and cached.')" || echo "Model pre-download failed - will download at runtime."
 
 USER appuser
 
