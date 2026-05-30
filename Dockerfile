@@ -2,8 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies including swap tools
-RUN apt-get update && apt-get install -y \
+# Fix apt-get issues with retry logic and non-interactive mode
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
@@ -11,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libgomp1 \
     wget \
+    ca-certificates \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and enable swap file (1GB)
@@ -26,6 +29,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
+
+# Force CPU-only execution
+ENV CUDA_VISIBLE_DEVICES=-1
+ENV ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider
 
 # Expose the port
 EXPOSE 8000
