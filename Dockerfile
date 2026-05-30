@@ -2,40 +2,34 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Fix apt-get issues with retry logic and non-interactive mode
-RUN apt-get update --fix-missing && \
+# Use different apt sources and install minimal required packages
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    wget \
-    ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create and enable swap file (1GB)
+# Create swap file
 RUN dd if=/dev/zero of=/swapfile bs=1M count=1024 && \
     chmod 600 /swapfile && \
     mkswap /swapfile && \
-    swapon /swapfile && \
-    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    swapon /swapfile
 
-# Copy requirements first (better caching)
+# Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --timeout 100 --retries 5
 
 # Copy application code
 COPY . .
 
-# Force CPU-only execution
+# Environment variables
 ENV CUDA_VISIBLE_DEVICES=-1
 ENV ONNXRUNTIME_EXECUTION_PROVIDERS=CPUExecutionProvider
+ENV INSIGHTFACE_MODEL=buffalo_s
 
-# Expose the port
+# Expose port
 EXPOSE 8000
 
-# Run FastAPI with uvicorn
+# Run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
