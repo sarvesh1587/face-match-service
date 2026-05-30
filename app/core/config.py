@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str | None = None  # required for Qdrant Cloud
 
     # ── InsightFace ───────────────────────────────────────────────────────────
-    INSIGHTFACE_MODEL: str = "buffalo_l"   # buffalo_l = ArcFace R100 backbone
+    INSIGHTFACE_MODEL: str = "buffalo_s"   # buffalo_l = ArcFace R100 backbone
     INSIGHTFACE_CTX_ID: int = -1           # -1 = CPU, 0 = first GPU
     EMBEDDING_DIM: int = 512
 
